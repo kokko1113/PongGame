@@ -1,5 +1,7 @@
-int leftPlayerY=0;
-int rightPlayerY=0;
+int initialLeftPlayerY=300;
+int initialRightPlayerY=300;
+int leftPlayerY=initialLeftPlayerY;
+int rightPlayerY=initialRightPlayerY;
 
 int playerWidth=4;
 int playerHeight=100;
@@ -7,17 +9,17 @@ int playerHeight=100;
 int space=20; // 壁とプレイヤーとの距離
 
 int ballSize=10;
-int initialBallX=50;
-int initialBallY=50;
-int initialBallXSpped=8;
-int initialBallYSpped=5;
+int initialBallX=350;
+int initialBallY=350;
+int initialBallXSpped=4;
+int initialBallYSpped=3;
 int ballX=initialBallX;
 int ballY=initialBallY;
 int ballXSpeed=initialBallXSpped;
 int ballYSpeed=initialBallYSpped;
 
-boolean isFinished=false;
-boolean isTime=false;
+boolean isFinished=true;
+boolean isTime=false; //一時停止用のフラグ
 
 // プレイヤー(ラケット)の表示を行う
 void makePlayers(){
@@ -49,10 +51,10 @@ void changeBallDerectionY(){
 }
 
 // 結果を表示
-void announceResult(String winner){
+void announceWinner(String winner){
     fill(0);
     textSize(50);
-    text("Finished!",250,330);
+    text("winner :  "+winner,200,330);
 
     fill(255,0,0);
     if(winner=="LEFT"){
@@ -65,10 +67,15 @@ void announceResult(String winner){
 void restartGame(){
     isFinished=false;
 
+    // すべての値を初期値に戻す
+    leftPlayerY=initialLeftPlayerY;
+    rightPlayerY=initialRightPlayerY;
     ballX=initialBallX;
     ballY=initialBallY;
-    ballXSpeed=initialBallXSpped;
-    ballYSpeed=initialBallYSpped;
+    
+    //ボールの最初の進行方向をランダムにした
+    ballXSpeed=(random(1) < 0.5) ? initialBallXSpped : -initialBallYSpped;
+    ballYSpeed=(random(1) < 0.5) ? initialBallXSpped : -initialBallYSpped;
 }
 
 //ボールが左ラケットに当たったか判定
@@ -93,44 +100,39 @@ boolean isHittedByRightPlayer(){
         return false;
     }
 }
-// ボールが壁に接触したか
-boolean isGameOver(){
-    if(ballX<=0 || ballX>=width-ballSize){
-        return true;
-    }else{
-        return false;
-    }
-}
 
 public void setup(){
     size(700,700);
     background(255);
+    
+    restartGame();
 }
+
 public void draw(){
     if(isFinished || isTime) return;
     
     background(255); // 画面更新用
+    
+    fill(0);
+    textSize(20);
+    text("Enter :   restart        Esc :   time",100,20);
 
     makePlayers();
 
     // ボールのｘ座標が左プレイヤーを越したとき
-    if(ballX<=playerWidth+space){
+    if(ballX <= playerWidth+space){
         if(!isHittedByLeftPlayer()){
-            if(isGameOver()){
-                isFinished=true;
-                announceResult("RIGHT");
-            }
+            isFinished=true;
+            announceWinner("RIGHT");
         }else{
             changeBallDerectionX();
         }
     }
     //ボールのｘ座標が右プレイヤーを越したとき
-    else if(ballX>=width-(playerWidth+space)){
+    else if(ballX >= width-(playerWidth+space)){
         if(!isHittedByRightPlayer()){
-            if(isGameOver()){
-                isFinished=true;
-                announceResult("LEFT");
-            }
+            isFinished=true;
+            announceWinner("LEFT");
         }else{
             changeBallDerectionX();
         }
@@ -150,20 +152,18 @@ void keyPressed() {
     }else if(keyCode==DOWN){
         rightPlayerY+=20;
     }
-    // 左プレイヤー操作
-    if(key=='w'){
-        leftPlayerY-=20;
-    }else if(key=='s'){
-        leftPlayerY+=20;
-    }
+    
     // 試合終了時に再開
-    if(key=='r'){
+    if(key == ENTER || key == RETURN){
         restartGame();
     }
     // 中断する
     if (key == ESC) {
         key = 0; // ここで止めないとウィンドウが閉じる
         isTime = !isTime;
+        textSize(100);
+        fill(0);
+        text("TIME",250,350);
     }
 }
 
